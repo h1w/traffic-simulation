@@ -357,9 +357,10 @@ class Crossroad_type1:
     
     def CarsMovement(self):
         for car in self.cars:
-            # print(car.id, car.pos, len(car.movement_way))
-            if car.pos != len(car.movement_way):
-                self.RoadLines(car.id, car.movement_way[car.pos])
+            # Кол-во автомобилей на конкретной полосе
+            # Для вычисления лучше создать отдельный поток
+            # if car.pos != len(car.movement_way):
+            #     self.RoadLines(car.id, car.movement_way[car.pos])
 
             if car.pos == len(car.movement_way):
                 self.crossroad_road[car.movement_way[car.pos-1]] = None
@@ -478,7 +479,6 @@ for sp_start in spawn_start:
         if best_way != None:
             best_ways.append(best_way)
 
-# print(best_ways)
 
 # AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), random.choice(spawn_start), random.choice(spawn_finish), 15, 2)
 
@@ -560,16 +560,6 @@ while True:
     
     if len(crossroad.cars) <= CAR_AMOUNT:
         best_way = random.choice(best_ways)
-        # print("AAAAA", best_way)
         start = best_way[0]
         finish = best_way[len(best_way)-1]
         AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), start, finish, 15, 2, best_way)
-
-    # print(crossroad.GetRoadLines())
-
-# crossroad.ChangeTrafficLightColor(23, "green")
-# crossroad.ChangeTrafficLightColor(72, "red")
-# crossroad.ChangeTrafficLightColor(119, "red")
-# crossroad.ChangeTrafficLightColor(168, "green")
-# crossroad.ChangeTrafficLightColor(215, "green")
-# crossroad.ChangeTrafficLightColor(263, "red")
