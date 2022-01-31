@@ -556,9 +556,9 @@ while True:
     address_led_strip.DisplayPixels(crossroad.crossroad_road)
 
     # a = input()
-    time.sleep(0.035)
+    time.sleep(0.03)
     
-    if len(crossroad.cars) <= CAR_AMOUNT:
+    if len(crossroad.cars) < CAR_AMOUNT:
         best_way = random.choice(best_ways)
         start = best_way[0]
         finish = best_way[len(best_way)-1]
