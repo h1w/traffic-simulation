@@ -18,7 +18,7 @@ PIXEL_PIN = board.D18
 ORDER = neopixel.RGB
 BRIGHTNESS = 0.5
 
-CAR_AMOUNT = 100
+CAR_AMOUNT = 150
 
 class AddressLedStrip:
     def __init__(self, num_pixels, pixel_pin, order, brightness):
@@ -352,8 +352,9 @@ class Crossroad_type1:
 
     
     def AddNewCar(self, car):
-        self.crossroad_road[car.pos_start] = car
-        self.cars.append(car)
+        if self.crossroad_road[car.pos_start] == None:
+            self.crossroad_road[car.pos_start] = car
+            self.cars.append(car)
     
     def CarsMovement(self):
         for car in self.cars:
@@ -470,8 +471,8 @@ ppa2 = ppa + 24*16
 
 # spawn_start = [0, 95, 96, 191, 192, 240]
 # spawn_finish = [287, 48, 47, 143, 144, 239]
-spawn_start = [0, 191, 192, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+144, ppa2+143, ppa2+263, ppa2+239]
-spawn_finish = [287, 143, 144, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+192, ppa2+191, ppa2+264, ppa2+0]
+spawn_start = [0, 191, 192, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+144, ppa2+143, ppa2+240, ppa2+239]
+spawn_finish = [287, 143, 144, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+192, ppa2+191, ppa2+287, ppa2+0]
 best_ways = []
 for sp_start in spawn_start:
     for sp_finish in spawn_finish:
@@ -549,6 +550,19 @@ def restapi():
 my_thread = threading.Thread(target=restapi, args=())
 my_thread.start()
 
+# Spawn new cars thread
+def SpawnNewCars():
+    while True:
+        time.sleep(0.01)
+        if len(crossroad.cars) < CAR_AMOUNT:
+            best_way = random.choice(best_ways)
+            start = best_way[0]
+            finish = best_way[len(best_way)-1]
+            AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), start, finish, 15, 2, best_way)
+
+spawn_new_cars = threading.Thread(target=SpawnNewCars, args=())
+spawn_new_cars.start()
+
 print("Loop has been started.")
 while True:
     crossroad.CarsMovement()
@@ -557,9 +571,3 @@ while True:
 
     # a = input()
     time.sleep(0.03)
-    
-    if len(crossroad.cars) < CAR_AMOUNT:
-        best_way = random.choice(best_ways)
-        start = best_way[0]
-        finish = best_way[len(best_way)-1]
-        AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), start, finish, 15, 2, best_way)
