@@ -13,7 +13,7 @@ import random
 
 import threading
 
-NUM_PIXELS = 24*12 + 24*16 + 24*12
+NUM_PIXELS = 24*12 + 24*16 + 24*12 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels
 PIXEL_PIN = board.D18
 ORDER = neopixel.RGB
 BRIGHTNESS = 0.5
