@@ -12,6 +12,8 @@ import json
 import random
 
 import threading
+import signal
+import sys
 
 NUM_PIXELS = 24*12 + 24*16 + 24*12 + 22*20 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels, crossroad 4 = 22*20
 PIXEL_PIN = board.D18
@@ -54,6 +56,7 @@ class Car:
         self.max_speed = max_speed
         self.acceleration = acceleration
         self.movement_way = movement_way
+        self.road_line = 0
 
 class TrafficLight:
     def __init__(self, pos, color="green"):
@@ -66,7 +69,7 @@ class TrafficLight:
     def GetColor(self, color):
         return self.color
 
-class Crossroad_type1:
+class TrafficSimulation:
     def __init__(self):
         # Add crossroad nodes
         self.nodes = []
@@ -426,9 +429,6 @@ class Crossroad_type1:
 
         self.cars = []
 
-        # Road line array
-        self.road_lines = [[], [], [], [], [], [], [], [], [], [], [], [], []]
-
         # Traffic Lights
         self.traffic_lights = {
             # Crossroad 1
@@ -481,18 +481,9 @@ class Crossroad_type1:
     
     def CarsMovement(self):
         for car in self.cars:
-            # Кол-во автомобилей на конкретной полосе
-            # Для вычисления лучше создать отдельный поток
-            # if car.pos != len(car.movement_way):
-            #     self.RoadLines(car.id, car.movement_way[car.pos])
 
             if car.pos == len(car.movement_way):
                 self.crossroad_road[car.movement_way[car.pos-1]] = None
-                
-                # Remove car_id from road_lines
-                for i in range(1, 13):
-                    if car.id in self.road_lines[i]:
-                        self.road_lines[i].remove(car.id)
                 
                 self.cars.remove(car) # remove car from cars list
                 continue
@@ -509,8 +500,6 @@ class Crossroad_type1:
                         self.crossroad_road[car.movement_way[car.pos-1]] = None
                         self.crossroad_road[car.movement_way[car.pos]] = car
                         self.cars[self.cars.index(car)].pos += 1
-
-        # print(self.road_lines)
     
     def FindBestWay(self, start, finish):
         best_way = None
@@ -527,42 +516,105 @@ class Crossroad_type1:
             return best_way
         
     def RoadLines(self, car_id, car_pos):
-        # Check if car not in older road line, remove it
-        for i in range(1, 13):
-            if car_id in self.road_lines[i]:
-                self.road_lines[i].remove(car_id)
+        ppa = 24*12
+        ppa2 = ppa + 24*16
+        ppa3 = ppa2 + 24*12
 
-        # Add car to needed road line
-        if car_pos >= 0 and car_pos <= 23:
-            self.road_lines[1].append(car_id)
-        elif car_pos >= 24 and car_pos <= 47:
-            self.road_lines[2].append(car_id)
-        elif car_pos >= 48 and car_pos <= 71:
-            self.road_lines[3].append(car_id)
-        elif car_pos >= 72 and car_pos <= 95:
-            self.road_lines[4].append(car_id)
-        elif car_pos >= 96 and car_pos <= 119:
-            self.road_lines[5].append(car_id)
-        elif car_pos >= 120 and car_pos <= 143:
-            self.road_lines[6].append(car_id)
-        elif car_pos >= 144 and car_pos <= 167:
-            self.road_lines[7].append(car_id)
-        elif car_pos >= 168 and car_pos <= 191:
-            self.road_lines[8].append(car_id)
-        elif car_pos >= 192 and car_pos <= 215:
-            self.road_lines[9].append(car_id)
-        elif car_pos >= 216 and car_pos <= 239:
-            self.road_lines[10].append(car_id)
-        elif car_pos >= 240 and car_pos <= 263:
-            self.road_lines[11].append(car_id)
-        elif car_pos >= 264 and car_pos <= 287:
-            self.road_lines[12].append(car_id)
-    
-    def GetRoadLines(self):
-        road_lines = {
-            'lines': self.road_lines[1:]
-        }
-        return json.dumps(road_lines)
+        if car_pos >= 216+ppa2 and car_pos <= 239+ppa2: # A1
+            # self.road_lines[1].append(car_id)
+            return 1
+        elif car_pos >= 240+ppa2 and car_pos <= 263+ppa2: # A2
+            # self.road_lines[2].append(car_id)
+            return 2
+        elif car_pos >= 24+ppa2 and car_pos <= 47+ppa2: # A3
+            # self.road_lines[3].append(car_id)
+            return 3
+        elif car_pos >= 48+ppa2 and car_pos <= 71+ppa2: # A4
+            # self.road_lines[4].append(car_id)
+            return 4
+        elif car_pos >= 120+ppa2 and car_pos <= 143+ppa2: # A5
+            # self.road_lines[5].append(car_id)
+            return 5
+        elif car_pos >= 144+ppa2 and car_pos <= 167+ppa2: # A6
+            # self.road_lines[6].append(car_id)
+            return 6
+
+        elif car_pos >= 192+ppa and car_pos <= 215+ppa: # A7
+            # self.road_lines[7].append(car_id)
+            return 7
+        elif car_pos >= 168+ppa and car_pos <= 191+ppa: # A8
+            # self.road_lines[8].append(car_id)
+            return 8
+        elif car_pos >= 96+ppa and car_pos <= 119+ppa: # A9
+            # self.road_lines[9].append(car_id)
+            return 9
+        elif car_pos >= 72+ppa and car_pos <= 95+ppa: # A10
+            # self.road_lines[10].append(car_id)
+            return 10
+        elif car_pos >= 0+ppa and car_pos <= 23+ppa: # A11
+            # self.road_lines[11].append(car_id)
+            return 11
+        elif car_pos >= 360+ppa and car_pos <= 383+ppa: # A12
+            # self.road_lines[12].append(car_id)
+            return 12
+        elif car_pos >= 288+ppa and car_pos <= 311+ppa: # A13
+            # self.road_lines[13].append(car_id)
+            return 13
+        elif car_pos >= 264+ppa and car_pos <= 287+ppa: # A14
+            # self.road_lines[14].append(car_id)
+            return 14
+        
+        elif car_pos >= 96 and car_pos <= 119: # A15
+            # self.road_lines[15].append(car_id)
+            return 15
+        elif car_pos >= 72 and car_pos <= 95: # A16
+            # self.road_lines[16].append(car_id)
+            return 16
+        elif car_pos >= 0 and car_pos <= 23: # A17
+            # self.road_lines[17].append(car_id)
+            return 17
+        elif car_pos >= 240 and car_pos <= 263: # A18
+            # self.road_lines[18].append(car_id)
+            return 18
+        elif car_pos >= 192 and car_pos <= 215: # A19
+            # self.road_lines[19].append(car_id)
+            return 19
+        elif car_pos >= 168 and car_pos <= 191: # A20
+            # self.road_lines[20].append(car_id)
+            return 20
+        
+        elif car_pos >= 88+ppa3 and car_pos <= 109+ppa3: # A21
+            # self.road_lines[21].append(car_id)
+            return 21
+        elif car_pos >= 66+ppa3 and car_pos <= 87+ppa3: # A22
+            # self.road_lines[22].append(car_id)
+            return 22
+        elif car_pos >= 0+ppa3 and car_pos <= 21+ppa3: # A23
+            # self.road_lines[23].append(car_id)
+            return 23
+        elif car_pos >= 418+ppa3 and car_pos <= 439+ppa3: # A24
+            # self.road_lines[24].append(car_id)
+            return 24
+        elif car_pos >= 352+ppa3 and car_pos <= 373+ppa3: # A25
+            # self.road_lines[25].append(car_id)
+            return 25
+        elif car_pos >= 330+ppa3 and car_pos <= 351+ppa3: # A26
+            # self.road_lines[26].append(car_id)
+            return 26
+        elif car_pos >= 308+ppa3 and car_pos <= 329+ppa3: # A27
+            # self.road_lines[27].append(car_id)
+            return 27
+        elif car_pos >= 220+ppa3 and car_pos <= 241+ppa3: # A28
+            # self.road_lines[28].append(car_id)
+            return 28
+        elif car_pos >= 198+ppa3 and car_pos <= 219+ppa3: # A29
+            # self.road_lines[29].append(car_id)
+            return 29
+        elif car_pos >= 176+ppa3 and car_pos <= 197+ppa3: # A30
+            # self.road_lines[30].append(car_id)
+            return 30
+        
+        return 0
     
     def ChangeTrafficLightColor(self, pos, color):
         self.traffic_lights[pos].color = color
@@ -572,51 +624,53 @@ address_led_strip = AddressLedStrip(NUM_PIXELS, PIXEL_PIN, ORDER, BRIGHTNESS)
 
 address_led_strip.ClearPixels() # Clear address led strip before work
 
-crossroad = Crossroad_type1()
+crossroad = TrafficSimulation()
 
 # Add car
 def AddCar(color, pos_start, pos_finish, max_speed, acceleration, movement_way):
     car = Car(color, pos_start, pos_finish, max_speed, acceleration, movement_way)
     crossroad.AddNewCar(car)
-    # best_way = crossroad.FindBestWay(car.pos_start, car.pos_finish)
-    # if best_way != None:
-    #     car.movement_way = best_way
-    #     crossroad.AddNewCar(car)
-        # print(best_way)
-
-# AddCar((0, 0, 255), 94, 108, 15, 2) # 1
-# AddCar((255, 255, 255), 0, 200, 15, 1) # 2
-# AddCar((120, 0, 0), 100, 56, 15, 5) # 3
-# AddCar((0, 255, 0), 50, 0, 15, 5) # 4
 
 ppa = 24*12
 ppa2 = ppa + 24*16
 ppa3 = ppa2 + 24*12
 
-# spawn_start = [0, 95, 96, 191, 192, 240]
-# spawn_finish = [287, 48, 47, 143, 144, 239]
-spawn_start = [0, 191, 192, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+240, ppa2+239, 308+ppa3, 351+ppa3, 352+ppa3, 220+ppa3, 219+ppa3, 176+ppa3]
-spawn_finish = [287, 143, 144, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+287, ppa2+0, 175+ppa3, 132+ppa3, 131+ppa3, 263+ppa3, 264+ppa3, 307+ppa3]
 best_ways = []
-for sp_start in spawn_start:
-    for sp_finish in spawn_finish:
-        best_way = crossroad.FindBestWay(sp_start, sp_finish)
-        if best_way != None:
-            best_ways.append(best_way)
+
+# Uncomment to generate ways again
+# spawn_start = [0, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+240, ppa2+239, 308+ppa3, 351+ppa3, 352+ppa3, 220+ppa3, 219+ppa3, 176+ppa3]
+# spawn_finish = [287, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+287, ppa2+0, 175+ppa3, 132+ppa3, 131+ppa3, 263+ppa3, 264+ppa3, 307+ppa3]
+
+# print('There is a search and generation of the shortest paths for traffic.')
+# print('This may take some time (about 1-2 minutes)\n')
+# for sp_start in spawn_start:
+#     for sp_finish in spawn_finish:
+#         best_way = crossroad.FindBestWay(sp_start, sp_finish)
+#         if best_way != None:
+#             best_ways.append(best_way)
+# print('Generation done.\n')
+# with open('shortest_ways.txt', 'w') as f:
+#     f.write(json.dumps(best_ways))
+
+# Use pregenerated best ways
+print('Using pregenerated best ways.\n')
+with open('pregenerated_shortest_ways.txt', 'r') as f:
+    best_ways = json.loads(f.read())
 
 
 # AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), random.choice(spawn_start), random.choice(spawn_finish), 15, 2)
 
 # Start new thread for traffic lights
-def restapi():
+traffic_lights_control_thread_alive = True
+def trafficLightsControl():
+    print("Traffic Lights loop has been started.\n")
     ppa = 24*12
     ppa2 = ppa + 24*16
     ppa3 = ppa2 + 24*12
     timing = time.time()
     ok = False
-    while True:
+    while traffic_lights_control_thread_alive:
         if time.time() - timing > 5.0:
-            print("Car amount:", len(crossroad.cars))
             timing = time.time()
             if ok == True:
                 # Crossroad 1
@@ -693,12 +747,43 @@ def restapi():
 
                 ok = True
 
-my_thread = threading.Thread(target=restapi, args=())
-my_thread.start()
+traffic_lights_control_thread = threading.Thread(target=trafficLightsControl, args=())
+traffic_lights_control_thread.start()
+
+# RoadLines thread
+roadlines_thread_alive = True
+def RoadLines_Thread():
+    print("RoadLines loop has been started.\n")
+
+    # Инициализировать tcp server
+
+    while roadlines_thread_alive:
+        road_lines = {}
+        for i in range(1,31):
+            road_lines.update( {f'A{i}': list()} )
+        
+        for car in crossroad.cars:
+            if car.pos != len(car.movement_way):
+                car.road_line = crossroad.RoadLines(car.id, car.movement_way[car.pos])
+                
+                if car.road_line != 0:
+                    road_lines[f'A{car.road_line}'].append(car.id)
+        
+        # print(road_lines)
+        # Отправлять каждый раз road_lines на tcp сервер, если он доступен
+
+        time.sleep(0.5)
+    
+    # Если roadlines_thread_alive == False, то закрыть соединение с tcp сервером
+
+roadlines_thread = threading.Thread(target=RoadLines_Thread, args=())
+roadlines_thread.start()
 
 # Spawn new cars thread
+spawn_new_cars_thread_alive = True
 def SpawnNewCars():
-    while True:
+    print("Spawn new cars loop has been started.\n")
+    while spawn_new_cars_thread_alive:
         time.sleep(0.01)
         if len(crossroad.cars) < CAR_AMOUNT:
             best_way = random.choice(best_ways)
@@ -706,14 +791,57 @@ def SpawnNewCars():
             finish = best_way[len(best_way)-1]
             AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), start, finish, 15, 2, best_way)
 
-spawn_new_cars = threading.Thread(target=SpawnNewCars, args=())
-spawn_new_cars.start()
+spawn_new_cars_thread = threading.Thread(target=SpawnNewCars, args=())
+spawn_new_cars_thread.start()
 
-print("Loop has been started.")
-while True:
-    crossroad.CarsMovement()
+# MainLoop thread
+mainloop_thread_alive = True
+def MainLoop():
+    print("Main loop has been started.\n")
+    while mainloop_thread_alive:
+        crossroad.CarsMovement()
 
-    address_led_strip.DisplayPixels(crossroad.crossroad_road)
+        address_led_strip.DisplayPixels(crossroad.crossroad_road)
 
-    # a = input()
-    time.sleep(0.03)
+        time.sleep(0.03)
+
+mainloop_thread = threading.Thread(target=MainLoop, args=())
+mainloop_thread.start()
+
+# Check User Input for stop app
+print("For exit program use Ctrl+C\n")
+
+def signal_handler(sig, frame):
+    print('\nTerminating all threads.\n')
+    
+    global mainloop_thread_alive
+    mainloop_thread_alive = False
+    print('Wait for a MainLoop thread to close...')
+    mainloop_thread.join()
+    print('MainLoop thread closed.\n')
+
+    global spawn_new_cars_thread_alive
+    spawn_new_cars_thread_alive = False
+    print('Wait for a SpawnNewCars thread to close... ')
+    spawn_new_cars_thread.join()
+    print('SpawnNewCars thread closed.\n')
+
+    global roadlines_thread_alive
+    roadlines_thread_alive = False
+    print('Wait for a RoadLines thread to close...')
+    roadlines_thread.join()
+    print('RoadLines thread closed.\n')
+
+    global traffic_lights_control_thread_alive
+    traffic_lights_control_thread_alive = False
+    print('Wait for a TrafficLightsControl thread to close...')
+    traffic_lights_control_thread.join()
+    print('TrafficLightsControl thread closed.\n')
+
+    address_led_strip.ClearPixels()
+    print('Led strip was cleared.\n')
+
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.pause()

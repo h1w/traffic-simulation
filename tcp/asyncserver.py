@@ -10,7 +10,6 @@ MAX_CONNECTIONS = 10
 INPUTS = list()
 OUTPUTS = list()
 
-
 def get_non_blocking_server_socket():
 
     # Создаем сокет, который работает без блокирования основного потока
