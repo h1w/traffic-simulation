@@ -488,7 +488,6 @@ class TrafficSimulation:
                 self.cars.remove(car) # remove car from cars list
                 continue
             elif car.pos == 0:
-                # if self.crossroad_road[car.movement_way[car.pos]] == None:
                 self.crossroad_road[car.movement_way[car.pos]] = car
                 self.cars[self.cars.index(car)].pos += 1
             elif car.pos > 0:
@@ -656,9 +655,6 @@ best_ways = []
 print('Using pregenerated best ways.\n')
 with open('pregenerated_shortest_ways.txt', 'r') as f:
     best_ways = json.loads(f.read())
-
-
-# AddCar((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), random.choice(spawn_start), random.choice(spawn_finish), 15, 2)
 
 # Start new thread for traffic lights
 traffic_lights_control_thread_alive = True
