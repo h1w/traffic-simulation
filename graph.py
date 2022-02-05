@@ -1,70 +1,65 @@
 class Node:
-  
     def __init__(self, data, indexloc = None):
         self.data = data
         self.index = indexloc
 
 class BinaryTree:
- 
     def __init__(self, nodes = []):
         self.nodes = nodes
- 
+
     def root(self):
         return self.nodes[0]
-    
+
     def iparent(self, i):
         return (i - 1) // 2
-    
+
     def ileft(self, i):
         return 2*i + 1
- 
+
     def iright(self, i):
         return 2*i + 2
- 
+
     def left(self, i):
         return self.node_at_index(self.ileft(i))
-    
+
     def right(self, i):
         return self.node_at_index(self.iright(i))
- 
+
     def parent(self, i):
         return self.node_at_index(self.iparent(i))
- 
+
     def node_at_index(self, i):
         return self.nodes[i]
- 
+
     def size(self):
         return len(self.nodes)
 
 class DijkstraNodeDecorator:
-    
     def __init__(self, node):
         self.node = node
         self.prov_dist = float('inf')
         self.hops = []
- 
+
     def index(self):
         return self.node.index
- 
+
     def data(self):
         return self.node.data
-    
+
     def update_data(self, data):
         self.prov_dist = data['prov_dist']
         self.hops = data['hops']
         return self
 
 class MinHeap(BinaryTree):
- 
     def __init__(self, nodes, is_less_than = lambda a,b: a < b, get_index = None, update_node = lambda node, newval: newval):
         BinaryTree.__init__(self, nodes)
         self.order_mapping = list(range(len(nodes)))
         self.is_less_than, self.get_index, self.update_node = is_less_than, get_index, update_node
         self.min_heapify()
- 
+
     # Изменение в кучу узлов, предполагается, что все поддеревья уже кучи
     def min_heapify_subtree(self, i):
- 
         size = self.size()
         ileft = self.ileft(i)
         iright = self.iright(i)
@@ -82,16 +77,16 @@ class MinHeap(BinaryTree):
                 self.order_mapping[self.get_index(self.nodes[imin])] = imin
                 self.order_mapping[self.get_index(self.nodes[i])] = i
             self.min_heapify_subtree(imin)
- 
- 
+
+
     # Превращает в кучу массив, который еще ей не является
     def min_heapify(self):
         for i in range(len(self.nodes), -1, -1):
             self.min_heapify_subtree(i)
- 
+
     def min(self):
         return self.nodes[0]
- 
+
     def pop(self):
         min = self.nodes[0]
         if self.size() > 1:
@@ -111,7 +106,7 @@ class MinHeap(BinaryTree):
             # Устанавливает значение None для self.order_mapping для обозначения непринадлежности к куче 
             self.order_mapping[self.get_index(min)] = None
         return min
- 
+
     # Обновляет значение узла и подстраивает его, если нужно, чтобы сохранить свойства кучи
     def decrease_key(self, i, val):
         self.nodes[i] = self.update_node(self.nodes[i], val)
@@ -126,23 +121,22 @@ class MinHeap(BinaryTree):
                 self.order_mapping[self.get_index(self.nodes[i])] = i
             i = iparent
             iparent = self.iparent(i) if i > 0 else None
- 
+
     def index_of_node_at(self, i):
         return self.get_index(self.nodes[i])  
-       
+
 class Graph:
- 
     @classmethod
     def create_from_nodes(self, nodes):
         return Graph(len(nodes), len(nodes), nodes)
- 
-  
+
+
     def __init__(self, row, col, nodes = None):
         self.nodes = nodes
         self.adj_list = [ [node, []] for node in nodes ]
         for i in range(len(self.nodes)):
             self.nodes[i].index = i
- 
+
     # Связывает node1 с node2
     # Обратите внимание, что ряд - источник, а столбец - назначение 
     # Обновлен для поддержки взвешенных ребер (поддержка алгоритма Дейкстры)
@@ -150,55 +144,55 @@ class Graph:
         node1, node2 = self.get_index_from_node(node1), self.get_index_from_node(node2)
         # Отмечает, что нижеуказанное не предотвращает от добавления связи дважды
         self.adj_list[node1][1].append((node2, weight))
-  
+
     # Опциональный весовой аргумент для поддержки алгоритма Дейкстры
     def connect(self, node1, node2, weight = 1):
         self.connect_dir(node1, node2, weight)
         # self.connect_dir(node2, node1, weight) # Для того чтобы ребра, который связывают вершины были направленные в обе стороны
-    
+
     def connections(self, node):
         node = self.get_index_from_node(node)
         return self.adj_list[node][1]
-  
+
     def print_adj_mat(self):
-      for row in self.adj_mat:
-          print(row)
-  
+        for row in self.adj_mat:
+            print(row)
+
     def node(self, index):
-      return self.nodes[index]
-    
-  
+        return self.nodes[index]
+
+
     def remove_conn(self, node1, node2):
-      self.remove_conn_dir(node1, node2)
-      self.remove_conn_dir(node2, node1)
-   
+        self.remove_conn_dir(node1, node2)
+        self.remove_conn_dir(node2, node1)
+
     # Убирает связь в направленной манере (nod1 к node2)
     # Может принять номер индекса ИЛИ объект узла
     def remove_conn_dir(self, node1, node2):
-      node1, node2 = self.get_index_from_node(node1), self.get_index_from_node(node2)
-      self.adj_mat[node1][node2] = 0   
-  
+        node1, node2 = self.get_index_from_node(node1), self.get_index_from_node(node2)
+        self.adj_mat[node1][node2] = 0   
+
     # Может пройти от node1 к node2
     def can_traverse_dir(self, node1, node2):
-      node1, node2 = self.get_index_from_node(node1), self.get_index_from_node(node2)
-      return self.adj_mat[node1][node2] != 0  
-  
+        node1, node2 = self.get_index_from_node(node1), self.get_index_from_node(node2)
+        return self.adj_mat[node1][node2] != 0  
+
     def has_conn(self, node1, node2):
-      return self.can_traverse_dir(node1, node2) or self.can_traverse_dir(node2, node1)
-  
+        return self.can_traverse_dir(node1, node2) or self.can_traverse_dir(node2, node1)
+
     def add_node(self,node):
-      self.nodes.append(node)
-      node.index = len(self.nodes) - 1
-      for row in self.adj_mat:
-        row.append(0)     
-      self.adj_mat.append([0] * (len(self.adj_mat) + 1))
- 
+        self.nodes.append(node)
+        node.index = len(self.nodes) - 1
+        for row in self.adj_mat:
+            row.append(0)     
+        self.adj_mat.append([0] * (len(self.adj_mat) + 1))
+
     # Получает вес, представленный перемещением от n1
     # к n2. Принимает номера индексов ИЛИ объекты узлов
     def get_weight(self, n1, n2):
         node1, node2 = self.get_index_from_node(n1), self.get_index_from_node(n2)
         return self.adj_mat[node1][node2]
-  
+
     # Разрешает проводить узлы ИЛИ индексы узлов  
     def get_index_from_node(self, node):
         if not isinstance(node, Node) and not isinstance(node, int):
@@ -220,12 +214,12 @@ class Graph:
         is_less_than = lambda a, b: a.prov_dist < b.prov_dist
         get_index = lambda node: node.index()
         update_node = lambda node, data: node.update_data(data)
- 
+
         # Подтверждает работу кучи с DijkstraNodeDecorators с узлами
         heap = MinHeap(dnodes, is_less_than, get_index, update_node)
- 
+
         min_dist_list = []
- 
+
         while heap.size() > 0:
             # Получает узел кучи, что еще не просматривался ('seen')
             # и находится на минимальном расстоянии от исходного узла
@@ -233,7 +227,7 @@ class Graph:
             min_dist = min_decorated_node.prov_dist
             hops = min_decorated_node.hops
             min_dist_list.append([min_dist, hops])
-            
+
             # Получает все следующие перескоки. Это больше не O(n^2) операция
             connections = self.connections(min_decorated_node.node)
             # Для каждой связи обновляет ее путь и полное расстояние от 
@@ -249,5 +243,5 @@ class Graph:
                         hops_cpy.append(node)
                         data = {'prov_dist': tot_dist, 'hops': hops_cpy}
                         heap.decrease_key(heap_location, data)
- 
+
         return min_dist_list
