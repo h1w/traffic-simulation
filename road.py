@@ -746,6 +746,15 @@ def trafficLightsControl():
 traffic_lights_control_thread = threading.Thread(target=trafficLightsControl, args=())
 traffic_lights_control_thread.start()
 
+def PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights):
+    ready_jsn = {
+        # 'cars_amount': cars_amount,
+        # 'cars_amount_on_traffic_lights': cars_amount_on_traffic_lights,
+        'traffic_count': traffic_count,
+        # 'road_lines': road_lines,
+    }
+    return json.dumps(ready_jsn)
+
 # RoadLines thread
 roadlines_thread_alive = True
 def RoadLines_Thread():
@@ -765,7 +774,17 @@ def RoadLines_Thread():
                 if car.road_line != 0:
                     road_lines[f'A{car.road_line}'].append(car.id)
         
-        # print(road_lines)
+        # Get count of traffic on lines
+        traffic_count = {}
+        cars_amount_on_traffic_lights = 0
+        for key, value in road_lines.items():
+            traffic_count[key] = len(value)
+            cars_amount_on_traffic_lights += len(value)
+        
+        cars_amount = len(crossroad.cars)
+        ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
+        print(ready_jsn, '\n')
+        
         # Отправлять каждый раз road_lines на tcp сервер, если он доступен
 
         time.sleep(0.5)
