@@ -13,7 +13,7 @@ import random
 
 import threading
 
-NUM_PIXELS = 24*12 + 24*16 + 24*12 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels
+NUM_PIXELS = 24*12 + 24*16 + 24*12 + 22*20 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels, crossroad 4 = 22*20
 PIXEL_PIN = board.D18
 ORDER = neopixel.RGB
 BRIGHTNESS = 0.5
@@ -142,8 +142,8 @@ class Crossroad_type1:
         self.graph.connect(self.nodes[287], self.nodes[0])
         # self.graph.connect(self.nodes[47], self.nodes[95])
         # self.graph.connect(self.nodes[48], self.nodes[96])
-        self.graph.connect(self.nodes[143], self.nodes[191])
-        self.graph.connect(self.nodes[144], self.nodes[192])
+        # self.graph.connect(self.nodes[143], self.nodes[191])
+        # self.graph.connect(self.nodes[144], self.nodes[192])
         self.graph.connect(self.nodes[239], self.nodes[240])
 
         # Crossroad 2
@@ -307,11 +307,119 @@ class Crossroad_type1:
                
 
         # Connect ends of roads to each other
-        self.graph.connect(self.nodes[192+ppa2], self.nodes[144+ppa2])
-        self.graph.connect(self.nodes[191+ppa2], self.nodes[143+ppa2])
+        # self.graph.connect(self.nodes[192+ppa2], self.nodes[144+ppa2])
+        # self.graph.connect(self.nodes[191+ppa2], self.nodes[143+ppa2])
         #
         self.graph.connect(self.nodes[0+ppa2], self.nodes[240+ppa2])
         self.graph.connect(self.nodes[287+ppa2], self.nodes[239+ppa2])
+
+        # Crossroad 4
+        ppa3 = ppa2 + 24*12 # prev_pix_amount
+
+        # Connect new crossroad with previous crossroad
+        # with crossroad 3
+        self.graph.connect(self.nodes[43+ppa3], self.nodes[143+ppa2])
+        self.graph.connect(self.nodes[44+ppa3], self.nodes[144+ppa2])
+        self.graph.connect(self.nodes[191+ppa2], self.nodes[87+ppa3])
+        self.graph.connect(self.nodes[192+ppa2], self.nodes[88+ppa3])
+        # with crossroad 1
+        self.graph.connect(self.nodes[143], self.nodes[0+ppa3])
+        self.graph.connect(self.nodes[144], self.nodes[439+ppa3])
+        self.graph.connect(self.nodes[395+ppa3], self.nodes[192])
+        self.graph.connect(self.nodes[396+ppa3], self.nodes[191])
+
+        # Connect self.nodes like road
+        ###
+        for node in range(439+ppa3, 418+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(0+ppa3, 21+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(22+ppa3, 43+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+
+        for node in range(65+ppa3, 44+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        ###
+        for node in range(87+ppa3, 66+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(88+ppa3, 109+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(110+ppa3, 131+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+
+        for node in range(153+ppa3, 132+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(154+ppa3, 175+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(176+ppa3, 197+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+
+        for node in range(219+ppa3, 198+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(220+ppa3, 241+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(242+ppa3, 263+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        
+        for node in range(285+ppa3, 264+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(286+ppa3, 307+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(308+ppa3, 329+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        
+        for node in range(351+ppa3, 330+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        for node in range(352+ppa3, 373+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        ###
+        for node in range(374+ppa3, 395+ppa3):
+            self.graph.connect(self.nodes[node], self.nodes[node+1])
+        
+        for node in range(417+ppa3, 396+ppa3, -1):
+            self.graph.connect(self.nodes[node], self.nodes[node-1])
+        
+        # Connect crossroad nodes
+        #
+        self.graph.connect(self.nodes[418+ppa3], self.nodes[286+ppa3])
+        self.graph.connect(self.nodes[418+ppa3], self.nodes[154+ppa3])
+        self.graph.connect(self.nodes[21+ppa3], self.nodes[153+ppa3])
+        self.graph.connect(self.nodes[21+ppa3], self.nodes[22+ppa3])
+        #
+        self.graph.connect(self.nodes[66+ppa3], self.nodes[417+ppa3])
+        self.graph.connect(self.nodes[66+ppa3], self.nodes[286+ppa3])
+        self.graph.connect(self.nodes[109+ppa3], self.nodes[285+ppa3])
+        self.graph.connect(self.nodes[109+ppa3], self.nodes[110+ppa3])
+        #
+        self.graph.connect(self.nodes[197+ppa3], self.nodes[65+ppa3])
+        self.graph.connect(self.nodes[197+ppa3], self.nodes[417+ppa3])
+        self.graph.connect(self.nodes[198+ppa3], self.nodes[374+ppa3])
+        self.graph.connect(self.nodes[241+ppa3], self.nodes[242+ppa3])
+        #
+        self.graph.connect(self.nodes[329+ppa3], self.nodes[154+ppa3])
+        self.graph.connect(self.nodes[329+ppa3], self.nodes[65+ppa3])
+        self.graph.connect(self.nodes[330+ppa3], self.nodes[22+ppa3])
+        self.graph.connect(self.nodes[373+ppa3], self.nodes[374+ppa3])
+
+        # Connect ends of roads to each other
+        self.graph.connect(self.nodes[263+ppa3], self.nodes[308+ppa3])
+        self.graph.connect(self.nodes[264+ppa3], self.nodes[351+ppa3])
+        self.graph.connect(self.nodes[307+ppa3], self.nodes[352+ppa3])
+        #
+        self.graph.connect(self.nodes[131+ppa3], self.nodes[176+ppa3])
+        self.graph.connect(self.nodes[132+ppa3], self.nodes[219+ppa3])
+        self.graph.connect(self.nodes[175+ppa3], self.nodes[220+ppa3])
 
         # Array for pixel displaying
         self.crossroad_road = [None] * NUM_PIXELS
@@ -348,6 +456,21 @@ class Crossroad_type1:
             24+ppa2: TrafficLight(24+ppa2, "red"),
             263+ppa2: TrafficLight(240+ppa2, "green"),
             216+ppa2: TrafficLight(216+ppa2, "green"),
+
+            # Crossroad 4
+            418+ppa3: TrafficLight(418+ppa3, "green"),
+            21+ppa3: TrafficLight(21+ppa3, "green"),
+            
+            66+ppa3: TrafficLight(66+ppa3, "red"),
+            109+ppa3: TrafficLight(109+ppa3, "red"),
+            
+            197+ppa3: TrafficLight(197+ppa3, "green"),
+            198+ppa3: TrafficLight(198+ppa3, "green"),
+            241+ppa3: TrafficLight(241+ppa3, "green"),
+            
+            329+ppa3: TrafficLight(329+ppa3, "red"),
+            330+ppa3: TrafficLight(330+ppa3, "red"),
+            373+ppa3: TrafficLight(373+ppa3, "red"),
         }
 
     
@@ -468,11 +591,12 @@ def AddCar(color, pos_start, pos_finish, max_speed, acceleration, movement_way):
 
 ppa = 24*12
 ppa2 = ppa + 24*16
+ppa3 = ppa2 + 24*12
 
 # spawn_start = [0, 95, 96, 191, 192, 240]
 # spawn_finish = [287, 48, 47, 143, 144, 239]
-spawn_start = [0, 191, 192, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+144, ppa2+143, ppa2+240, ppa2+239]
-spawn_finish = [287, 143, 144, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+192, ppa2+191, ppa2+287, ppa2+0]
+spawn_start = [0, 191, 192, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+240, ppa2+239, 308+ppa3, 351+ppa3, 352+ppa3, 220+ppa3, 219+ppa3, 176+ppa3]
+spawn_finish = [287, 143, 144, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+287, ppa2+0, 175+ppa3, 132+ppa3, 131+ppa3, 263+ppa3, 264+ppa3, 307+ppa3]
 best_ways = []
 for sp_start in spawn_start:
     for sp_finish in spawn_finish:
@@ -487,6 +611,7 @@ for sp_start in spawn_start:
 def restapi():
     ppa = 24*12
     ppa2 = ppa + 24*16
+    ppa3 = ppa2 + 24*12
     timing = time.time()
     ok = False
     while True:
@@ -517,6 +642,17 @@ def restapi():
                 crossroad.ChangeTrafficLightColor(24+ppa2, "red")
                 crossroad.ChangeTrafficLightColor(263+ppa2, "green")
                 crossroad.ChangeTrafficLightColor(216+ppa2, "green")
+                # Crossroad 4
+                crossroad.ChangeTrafficLightColor(418+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(21+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(66+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(109+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(197+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(198+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(241+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(329+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(330+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(373+ppa3, "red")
 
                 ok = False
             else:
@@ -543,9 +679,19 @@ def restapi():
                 crossroad.ChangeTrafficLightColor(24+ppa2, "green")
                 crossroad.ChangeTrafficLightColor(263+ppa2, "red")
                 crossroad.ChangeTrafficLightColor(216+ppa2, "red")
+                # Crossroad 4
+                crossroad.ChangeTrafficLightColor(418+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(21+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(66+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(109+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(197+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(198+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(241+ppa3, "red")
+                crossroad.ChangeTrafficLightColor(329+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(330+ppa3, "green")
+                crossroad.ChangeTrafficLightColor(373+ppa3, "green")
 
                 ok = True
-    
 
 my_thread = threading.Thread(target=restapi, args=())
 my_thread.start()
