@@ -783,7 +783,6 @@ def RoadLines_Thread():
         
         cars_amount = len(crossroad.cars)
         ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
-        print(ready_jsn, '\n')
         
         # Отправлять каждый раз road_lines на tcp сервер, если он доступен
 
@@ -822,6 +821,8 @@ def MainLoop():
 
 mainloop_thread = threading.Thread(target=MainLoop, args=())
 mainloop_thread.start()
+
+time.sleep(0.5)
 
 # Check User Input for stop app
 print("For exit program use Ctrl+C\n")
