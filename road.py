@@ -15,6 +15,12 @@ import threading
 import signal
 import sys
 
+import socket
+address_to_server = ('localhost', 8686)
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(address_to_server)
+
 NUM_PIXELS = 24*12 + 24*16 + 24*12 + 22*20 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels, crossroad 4 = 22*20
 PIXEL_PIN = board.D18
 ORDER = neopixel.RGB
@@ -666,82 +672,161 @@ def trafficLightsControl():
     timing = time.time()
     ok = False
     while traffic_lights_control_thread_alive:
-        if time.time() - timing > 5.0:
+        if time.time() - timing > 1.0:
             timing = time.time()
-            if ok == True:
-                # Crossroad 1
-                crossroad.ChangeTrafficLightColor(23, "red")
-                crossroad.ChangeTrafficLightColor(72, "green")
-                crossroad.ChangeTrafficLightColor(119, "green")
-                crossroad.ChangeTrafficLightColor(168, "red")
-                crossroad.ChangeTrafficLightColor(215, "red")
-                crossroad.ChangeTrafficLightColor(263, "green")
-                # Crossroad 2
-                crossroad.ChangeTrafficLightColor(23+ppa, "red")
-                crossroad.ChangeTrafficLightColor(72+ppa, "green")
-                crossroad.ChangeTrafficLightColor(119+ppa, "green")
-                crossroad.ChangeTrafficLightColor(168+ppa, "red")
-                crossroad.ChangeTrafficLightColor(215+ppa, "red")
-                crossroad.ChangeTrafficLightColor(264+ppa, "green")
-                crossroad.ChangeTrafficLightColor(311+ppa, "green")
-                crossroad.ChangeTrafficLightColor(360+ppa, "red")
-                # Crossroad 3
-                crossroad.ChangeTrafficLightColor(167+ppa2, "green")
-                crossroad.ChangeTrafficLightColor(120+ppa2, "green")
-                crossroad.ChangeTrafficLightColor(71+ppa2, "red")
-                crossroad.ChangeTrafficLightColor(24+ppa2, "red")
-                crossroad.ChangeTrafficLightColor(263+ppa2, "green")
-                crossroad.ChangeTrafficLightColor(216+ppa2, "green")
-                # Crossroad 4
-                crossroad.ChangeTrafficLightColor(418+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(21+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(66+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(109+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(197+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(198+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(241+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(329+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(330+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(373+ppa3, "red")
+            
+            client.send(bytes("get_ctc", encoding="UTF-8"))
+            data = client.recv(1024)
 
-                ok = False
-            else:
-                # Crossroad 1
-                crossroad.ChangeTrafficLightColor(23, "green")
-                crossroad.ChangeTrafficLightColor(72, "red")
-                crossroad.ChangeTrafficLightColor(119, "red")
-                crossroad.ChangeTrafficLightColor(168, "green")
-                crossroad.ChangeTrafficLightColor(215, "green")
-                crossroad.ChangeTrafficLightColor(263, "red")
-                # Crossroad 2
-                crossroad.ChangeTrafficLightColor(23+ppa, "green")
-                crossroad.ChangeTrafficLightColor(72+ppa, "red")
-                crossroad.ChangeTrafficLightColor(119+ppa, "red")
-                crossroad.ChangeTrafficLightColor(168+ppa, "green")
-                crossroad.ChangeTrafficLightColor(215+ppa, "green")
-                crossroad.ChangeTrafficLightColor(264+ppa, "red")
-                crossroad.ChangeTrafficLightColor(311+ppa, "red")
-                crossroad.ChangeTrafficLightColor(360+ppa, "green")
-                # Crossroad 3
-                crossroad.ChangeTrafficLightColor(167+ppa2, "red")
-                crossroad.ChangeTrafficLightColor(120+ppa2, "red")
-                crossroad.ChangeTrafficLightColor(71+ppa2, "green")
-                crossroad.ChangeTrafficLightColor(24+ppa2, "green")
-                crossroad.ChangeTrafficLightColor(263+ppa2, "red")
-                crossroad.ChangeTrafficLightColor(216+ppa2, "red")
-                # Crossroad 4
-                crossroad.ChangeTrafficLightColor(418+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(21+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(66+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(109+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(197+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(198+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(241+ppa3, "red")
-                crossroad.ChangeTrafficLightColor(329+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(330+ppa3, "green")
-                crossroad.ChangeTrafficLightColor(373+ppa3, "green")
+            traffic_control = str(data)
 
-                ok = True
+            traffic_control = traffic_control.split('|')
+
+            for traffic_light in traffic_control:
+                key = traffic_light.split(':')[0]
+                value = traffic_light.split(':')[1]
+
+                # Crossroad 3
+                if key == "A1":
+                    crossroad.ChangeTrafficLightColor(216+ppa2, value)
+                elif key == "A2":
+                    crossroad.ChangeTrafficLightColor(263+ppa2, value)
+                elif key == "A3":
+                    crossroad.ChangeTrafficLightColor(24+ppa2, value)
+                elif key == "A4":
+                    crossroad.ChangeTrafficLightColor(71+ppa2, value)
+                elif key == "A5":
+                    crossroad.ChangeTrafficLightColor(120+ppa2, value)
+                elif key == "A6":
+                    crossroad.ChangeTrafficLightColor(167+ppa2, value)
+                # Crossroad 2
+                elif key == "A7":
+                    crossroad.ChangeTrafficLightColor(215+ppa, value)
+                elif key == "A8":
+                    crossroad.ChangeTrafficLightColor(168+ppa, value)
+                elif key == "A9":
+                    crossroad.ChangeTrafficLightColor(119+ppa, value)
+                elif key == "A10":
+                    crossroad.ChangeTrafficLightColor(72+ppa, value)
+                elif key == "A11":
+                    crossroad.ChangeTrafficLightColor(23+ppa, value)
+                elif key == "A12":
+                    crossroad.ChangeTrafficLightColor(360+ppa, value)
+                elif key == "A13":
+                    crossroad.ChangeTrafficLightColor(311+ppa, value)
+                elif key == "A14":
+                    crossroad.ChangeTrafficLightColor(264+ppa, value)
+                # Crossroad 1
+                elif key == "A15":
+                    crossroad.ChangeTrafficLightColor(119, value)
+                elif key == "A16":
+                    crossroad.ChangeTrafficLightColor(72, value)
+                elif key == "A17":
+                    crossroad.ChangeTrafficLightColor(23, value)
+                elif key == "A18":
+                    crossroad.ChangeTrafficLightColor(263, value)
+                elif key == "A19":
+                    crossroad.ChangeTrafficLightColor(215, value)
+                elif key == "A20":
+                    crossroad.ChangeTrafficLightColor(168, value)
+                # Crossroad 4
+                elif key == "A21":
+                    crossroad.ChangeTrafficLightColor(109+ppa3, value)
+                elif key == "A22":
+                    crossroad.ChangeTrafficLightColor(66+ppa3, value)
+                elif key == "A23":
+                    crossroad.ChangeTrafficLightColor(21+ppa3, value)
+                elif key == "A24":
+                    crossroad.ChangeTrafficLightColor(418+ppa3, value)
+                elif key == "A25":
+                    crossroad.ChangeTrafficLightColor(373+ppa3, value)
+                elif key == "A26":
+                    crossroad.ChangeTrafficLightColor(330+ppa3, value)
+                elif key == "A27":
+                    crossroad.ChangeTrafficLightColor(329+ppa3, value)
+                elif key == "A28":
+                    crossroad.ChangeTrafficLightColor(241+ppa3, value)
+                elif key == "A29":
+                    crossroad.ChangeTrafficLightColor(198+ppa3, value)
+                elif key == "A30":
+                    crossroad.ChangeTrafficLightColor(197+ppa3, value)
+        
+        # if time.time() - timing > 5.0:
+        #     timing = time.time()
+        #     if ok == True:
+        #         # Crossroad 1
+        #         crossroad.ChangeTrafficLightColor(23, "red")
+        #         crossroad.ChangeTrafficLightColor(72, "green")
+        #         crossroad.ChangeTrafficLightColor(119, "green")
+        #         crossroad.ChangeTrafficLightColor(168, "red")
+        #         crossroad.ChangeTrafficLightColor(215, "red")
+        #         crossroad.ChangeTrafficLightColor(263, "green")
+        #         # Crossroad 2
+        #         crossroad.ChangeTrafficLightColor(23+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(72+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(119+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(168+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(215+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(264+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(311+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(360+ppa, "red")
+        #         # Crossroad 3
+        #         crossroad.ChangeTrafficLightColor(167+ppa2, "green")
+        #         crossroad.ChangeTrafficLightColor(120+ppa2, "green")
+        #         crossroad.ChangeTrafficLightColor(71+ppa2, "red")
+        #         crossroad.ChangeTrafficLightColor(24+ppa2, "red")
+        #         crossroad.ChangeTrafficLightColor(263+ppa2, "green")
+        #         crossroad.ChangeTrafficLightColor(216+ppa2, "green")
+        #         # Crossroad 4
+        #         crossroad.ChangeTrafficLightColor(418+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(21+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(66+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(109+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(197+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(198+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(241+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(329+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(330+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(373+ppa3, "red")
+
+        #         ok = False
+        #     else:
+        #         # Crossroad 1
+        #         crossroad.ChangeTrafficLightColor(23, "green")
+        #         crossroad.ChangeTrafficLightColor(72, "red")
+        #         crossroad.ChangeTrafficLightColor(119, "red")
+        #         crossroad.ChangeTrafficLightColor(168, "green")
+        #         crossroad.ChangeTrafficLightColor(215, "green")
+        #         crossroad.ChangeTrafficLightColor(263, "red")
+        #         # Crossroad 2
+        #         crossroad.ChangeTrafficLightColor(23+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(72+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(119+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(168+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(215+ppa, "green")
+        #         crossroad.ChangeTrafficLightColor(264+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(311+ppa, "red")
+        #         crossroad.ChangeTrafficLightColor(360+ppa, "green")
+        #         # Crossroad 3
+        #         crossroad.ChangeTrafficLightColor(167+ppa2, "red")
+        #         crossroad.ChangeTrafficLightColor(120+ppa2, "red")
+        #         crossroad.ChangeTrafficLightColor(71+ppa2, "green")
+        #         crossroad.ChangeTrafficLightColor(24+ppa2, "green")
+        #         crossroad.ChangeTrafficLightColor(263+ppa2, "red")
+        #         crossroad.ChangeTrafficLightColor(216+ppa2, "red")
+        #         # Crossroad 4
+        #         crossroad.ChangeTrafficLightColor(418+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(21+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(66+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(109+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(197+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(198+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(241+ppa3, "red")
+        #         crossroad.ChangeTrafficLightColor(329+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(330+ppa3, "green")
+        #         crossroad.ChangeTrafficLightColor(373+ppa3, "green")
+
+        #         ok = True
 
 traffic_lights_control_thread = threading.Thread(target=trafficLightsControl, args=())
 traffic_lights_control_thread.start()
@@ -759,8 +844,6 @@ def PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traff
 roadlines_thread_alive = True
 def RoadLines_Thread():
     print("RoadLines loop has been started.\n")
-
-    # Инициализировать tcp server
 
     while roadlines_thread_alive:
         road_lines = {}
@@ -785,6 +868,9 @@ def RoadLines_Thread():
         ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
         
         # Отправлять каждый раз road_lines на tcp сервер, если он доступен
+        client.send(bytes("road_lines | " + ready_jsn, encoding="UTF-8"))
+        data = client.recv(1024)
+        # print(str(data))
 
         time.sleep(0.5)
     

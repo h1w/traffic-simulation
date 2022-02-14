@@ -2,6 +2,7 @@ import asyncio
 import json
 
 car_count_answer = None
+traffic_control = None
 
 async def _jsn(jsn):
     car_count_tmp = ""
@@ -31,6 +32,16 @@ async def _handler(reader, writer):
     elif itendifier == "car_count":
         if car_count_answer != None:
             answer = car_count_answer
+        else:
+            answer = "None"
+    
+    elif itendifier == "ctc":
+        global traffic_control
+        traffic_control = "".join(message.split('|')[1:])
+    
+    elif itendifier == "get_ctc":
+        if traffic_control != None:
+            answer = traffic_control
         else:
             answer = "None"
 
