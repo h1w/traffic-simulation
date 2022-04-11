@@ -15,21 +15,25 @@ import threading
 import signal
 import sys
 
-import socket
-address_to_server = ('localhost', 8000)
+import asyncio, socket
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(address_to_server)
+server_addr = '0.0.0.0'
+server_port = 8000
 
-client.send(bytes("raspberry", encoding="UTF-8"))
-# data = str(client.recv(1024))
+import logging
+
+logging.basicConfig(format='%(asctime)s %(lineno)d %(levelname)s:%(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 NUM_PIXELS = 24*12 + 24*16 + 24*12 + 22*20 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels, crossroad 4 = 22*20
 PIXEL_PIN = board.D18
 ORDER = neopixel.RGB
 BRIGHTNESS = 0.5
 
-CAR_AMOUNT = 100
+CAR_AMOUNT = 220
+
+car_count_answer = None
+traffic_control = None
 
 class AddressLedStrip:
     def __init__(self, num_pixels, pixel_pin, order, brightness):
@@ -678,82 +682,84 @@ def trafficLightsControl():
         if time.time() - timing > 1.0:
             try:
                 timing = time.time()
-                
-                # client.send(bytes("get_ctc", encoding="UTF-8"))
-                data = str(client.recv(1024))
 
-                traffic_control = data
+                global traffic_control
+                if traffic_control != None:
+                    traffic_control_tmp = traffic_control
 
-                traffic_control = traffic_control.split('|')
+                    # global logger
+                    # logger.info(f'Traffic Control Tmp = {traffic_control_tmp}')
 
-                for traffic_light in traffic_control:
-                    key = traffic_light.split(':')[0]
-                    value = traffic_light.split(':')[1]
+                    traffic_control_tmp = traffic_control_tmp.split('|')[1:]
 
-                    # Crossroad 3
-                    if key == "A1":
-                        crossroad.ChangeTrafficLightColor(216+ppa2, value)
-                    elif key == "A2":
-                        crossroad.ChangeTrafficLightColor(263+ppa2, value)
-                    elif key == "A3":
-                        crossroad.ChangeTrafficLightColor(24+ppa2, value)
-                    elif key == "A4":
-                        crossroad.ChangeTrafficLightColor(71+ppa2, value)
-                    elif key == "A5":
-                        crossroad.ChangeTrafficLightColor(120+ppa2, value)
-                    elif key == "A6":
-                        crossroad.ChangeTrafficLightColor(167+ppa2, value)
-                    # Crossroad 2
-                    elif key == "A7":
-                        crossroad.ChangeTrafficLightColor(215+ppa, value)
-                    elif key == "A8":
-                        crossroad.ChangeTrafficLightColor(168+ppa, value)
-                    elif key == "A9":
-                        crossroad.ChangeTrafficLightColor(119+ppa, value)
-                    elif key == "A10":
-                        crossroad.ChangeTrafficLightColor(72+ppa, value)
-                    elif key == "A11":
-                        crossroad.ChangeTrafficLightColor(23+ppa, value)
-                    elif key == "A12":
-                        crossroad.ChangeTrafficLightColor(360+ppa, value)
-                    elif key == "A13":
-                        crossroad.ChangeTrafficLightColor(311+ppa, value)
-                    elif key == "A14":
-                        crossroad.ChangeTrafficLightColor(264+ppa, value)
-                    # Crossroad 1
-                    elif key == "A15":
-                        crossroad.ChangeTrafficLightColor(119, value)
-                    elif key == "A16":
-                        crossroad.ChangeTrafficLightColor(72, value)
-                    elif key == "A17":
-                        crossroad.ChangeTrafficLightColor(23, value)
-                    elif key == "A18":
-                        crossroad.ChangeTrafficLightColor(263, value)
-                    elif key == "A19":
-                        crossroad.ChangeTrafficLightColor(215, value)
-                    elif key == "A20":
-                        crossroad.ChangeTrafficLightColor(168, value)
-                    # Crossroad 4
-                    elif key == "A21":
-                        crossroad.ChangeTrafficLightColor(109+ppa3, value)
-                    elif key == "A22":
-                        crossroad.ChangeTrafficLightColor(66+ppa3, value)
-                    elif key == "A23":
-                        crossroad.ChangeTrafficLightColor(21+ppa3, value)
-                    elif key == "A24":
-                        crossroad.ChangeTrafficLightColor(418+ppa3, value)
-                    elif key == "A25":
-                        crossroad.ChangeTrafficLightColor(373+ppa3, value)
-                    elif key == "A26":
-                        crossroad.ChangeTrafficLightColor(330+ppa3, value)
-                    elif key == "A27":
-                        crossroad.ChangeTrafficLightColor(329+ppa3, value)
-                    elif key == "A28":
-                        crossroad.ChangeTrafficLightColor(241+ppa3, value)
-                    elif key == "A29":
-                        crossroad.ChangeTrafficLightColor(198+ppa3, value)
-                    elif key == "A30":
-                        crossroad.ChangeTrafficLightColor(197+ppa3, value)
+                    for traffic_light in traffic_control_tmp:
+                        key = traffic_light.split(':')[0]
+                        value = traffic_light.split(':')[1]
+
+                        # Crossroad 3
+                        if key == "A1":
+                            crossroad.ChangeTrafficLightColor(216+ppa2, value)
+                        elif key == "A2":
+                            crossroad.ChangeTrafficLightColor(263+ppa2, value)
+                        elif key == "A3":
+                            crossroad.ChangeTrafficLightColor(24+ppa2, value)
+                        elif key == "A4":
+                            crossroad.ChangeTrafficLightColor(71+ppa2, value)
+                        elif key == "A5":
+                            crossroad.ChangeTrafficLightColor(120+ppa2, value)
+                        elif key == "A6":
+                            crossroad.ChangeTrafficLightColor(167+ppa2, value)
+                        # Crossroad 2
+                        elif key == "A7":
+                            crossroad.ChangeTrafficLightColor(215+ppa, value)
+                        elif key == "A8":
+                            crossroad.ChangeTrafficLightColor(168+ppa, value)
+                        elif key == "A9":
+                            crossroad.ChangeTrafficLightColor(119+ppa, value)
+                        elif key == "A10":
+                            crossroad.ChangeTrafficLightColor(72+ppa, value)
+                        elif key == "A11":
+                            crossroad.ChangeTrafficLightColor(23+ppa, value)
+                        elif key == "A12":
+                            crossroad.ChangeTrafficLightColor(360+ppa, value)
+                        elif key == "A13":
+                            crossroad.ChangeTrafficLightColor(311+ppa, value)
+                        elif key == "A14":
+                            crossroad.ChangeTrafficLightColor(264+ppa, value)
+                        # Crossroad 1
+                        elif key == "A15":
+                            crossroad.ChangeTrafficLightColor(119, value)
+                        elif key == "A16":
+                            crossroad.ChangeTrafficLightColor(72, value)
+                        elif key == "A17":
+                            crossroad.ChangeTrafficLightColor(23, value)
+                        elif key == "A18":
+                            crossroad.ChangeTrafficLightColor(263, value)
+                        elif key == "A19":
+                            crossroad.ChangeTrafficLightColor(215, value)
+                        elif key == "A20":
+                            crossroad.ChangeTrafficLightColor(168, value)
+                        # Crossroad 4
+                        elif key == "A21":
+                            crossroad.ChangeTrafficLightColor(109+ppa3, value)
+                        elif key == "A22":
+                            crossroad.ChangeTrafficLightColor(66+ppa3, value)
+                        elif key == "A23":
+                            crossroad.ChangeTrafficLightColor(21+ppa3, value)
+                        elif key == "A24":
+                            crossroad.ChangeTrafficLightColor(418+ppa3, value)
+                        elif key == "A25":
+                            crossroad.ChangeTrafficLightColor(373+ppa3, value)
+                        elif key == "A26":
+                            crossroad.ChangeTrafficLightColor(330+ppa3, value)
+                        elif key == "A27":
+                            crossroad.ChangeTrafficLightColor(329+ppa3, value)
+                        elif key == "A28":
+                            crossroad.ChangeTrafficLightColor(241+ppa3, value)
+                        elif key == "A29":
+                            crossroad.ChangeTrafficLightColor(198+ppa3, value)
+                        elif key == "A30":
+                            crossroad.ChangeTrafficLightColor(197+ppa3, value)
             except Exception as e:
                 pass
         
@@ -864,17 +870,28 @@ def RoadLines_Thread():
                     road_lines[f'A{car.road_line}'].append(car.id)
         
         # Get count of traffic on lines
-        traffic_count = {}
-        cars_amount_on_traffic_lights = 0
+        # traffic_count = {}
+        # cars_amount_on_traffic_lights = 0
+        # for key, value in road_lines.items():
+        #     traffic_count[key] = len(value)
+        #     cars_amount_on_traffic_lights += len(value)
+        car_count_tmp=''
         for key, value in road_lines.items():
-            traffic_count[key] = len(value)
-            cars_amount_on_traffic_lights += len(value)
+            car_count_tmp += f'/{len(value)}*'
+        global car_count_answer
+        car_count_answer = car_count_tmp
         
-        cars_amount = len(crossroad.cars)
-        ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
+        # cars_amount = len(crossroad.cars)
+        # ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
         
+        # car_count_tmp = ''
+        # for key, value in ready_jsn['traffic_count'].items():
+        #     car_count_tmp += f'/{value}*'
+        # global car_count_answer
+        # car_count_answer = car_count_tmp
+
         # Отправлять каждый раз road_lines на tcp сервер, если он доступен
-        client.send(bytes(ready_jsn, encoding="UTF-8"))
+        # client.send(bytes(ready_jsn, encoding="UTF-8"))
         # data = str(client.recv(1024))
         # print(data)
 
@@ -899,6 +916,79 @@ def SpawnNewCars():
 
 spawn_new_cars_thread = threading.Thread(target=SpawnNewCars, args=())
 spawn_new_cars_thread.start()
+
+# Tcp Server for Elkin Software
+server_addr = '0.0.0.0'
+server_port = 8686
+
+traffic_control_tcp_server_alive = True
+clients = []
+send_loop = True
+listen_loop = True
+
+async def PrettyTrafficControl(request):
+    traffic_control_tmp = ''
+    # /A1:g*/A2:r*/A3:r*/A4:g*/A6:g*/A7:r*
+    l = request.split('/')[1:]
+    for i in l:
+        key = i.split(':')[0]
+        value = i.split(':')[1].rstrip('*')
+        if value == 'r':
+            value = 'red'
+        elif value == 'g':
+            value = 'green'
+        traffic_control_tmp += f'|{key}:{value}'
+    global traffic_control
+    traffic_control = traffic_control_tmp
+
+async def handle_read(reader, addr):
+    global listen_loop
+
+    while listen_loop:
+        data = (await reader.read(1024)).decode('utf8')
+        logging.info(f'Received {data!r} from {addr!r}')
+        await PrettyTrafficControl(data)
+
+async def handle_write(writer, addr):
+    global car_count_answer
+    global send_loop
+
+    while send_loop:
+        await asyncio.sleep(3)
+
+        if car_count_answer != None:
+            writer.write(car_count_answer.encode('utf8'))
+            await writer.drain()
+            logging.info(f'Sended {car_count_answer!r} to {addr!r}')
+
+async def handle_client(reader, writer):
+    global clients
+
+    addr = writer.get_extra_info('peername')
+    logging.info(f'New client {addr!r}')
+
+    if not clients:
+        # first client is sending data
+        clients.append(asyncio.create_task(handle_read(reader, addr)))
+    else:
+        # all other clients are receiving data every 3 seconds
+        clients.append(asyncio.create_task(handle_write(writer, addr)))
+    
+    await clients [-1]
+
+async def run_server():
+    server = await asyncio.start_server(handle_client, server_addr, server_port)
+    async with server:
+        await server.serve_forever()
+
+def TrafficControlTCPServer():
+    logging.info('Traffic control TCP server has been started\n')
+    asyncio.run(run_server())
+    while traffic_control_tcp_server_alive:
+        pass
+    
+traffic_control_tcp_server_thread = threading.Thread(target=TrafficControlTCPServer, args=())
+traffic_control_tcp_server_thread.start()
 
 # MainLoop thread
 mainloop_thread_alive = True
@@ -948,6 +1038,16 @@ def signal_handler(sig, frame):
 
     address_led_strip.ClearPixels()
     print('Led strip was cleared.\n')
+
+    global traffic_control_tcp_server_alive
+    global send_loop
+    global listen_loop
+    traffic_control_tcp_server_alive = False
+    send_loop = False
+    listen_loop = False
+    print('Wait for a TrafficControlTCPServer thread to close...')
+    traffic_control_tcp_server_thread.join()
+    print('TrafficControlTCPServer thread closed.\n')
 
     sys.exit(0)
 
