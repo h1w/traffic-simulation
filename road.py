@@ -653,26 +653,26 @@ best_ways = []
 # spawn_start = [0, 240, ppa+95, ppa+96, ppa+191, ppa+192, ppa2+240, ppa2+239, 308+ppa3, 351+ppa3, 352+ppa3, 220+ppa3, 219+ppa3, 176+ppa3]
 # spawn_finish = [287, 239, ppa+47, ppa+48, ppa+143, ppa+144, ppa2+287, ppa2+0, 175+ppa3, 132+ppa3, 131+ppa3, 263+ppa3, 264+ppa3, 307+ppa3]
 
-# print('There is a search and generation of the shortest paths for traffic.')
-# print('This may take some time (about 1-2 minutes)\n')
+# logging.info('There is a search and generation of the shortest paths for traffic.')
+# logging.info('This may take some time (about 1-2 minutes)\n')
 # for sp_start in spawn_start:
 #     for sp_finish in spawn_finish:
 #         best_way = crossroad.FindBestWay(sp_start, sp_finish)
 #         if best_way != None:
 #             best_ways.append(best_way)
-# print('Generation done.\n')
+# logging.info('Generation done.\n')
 # with open('shortest_ways.txt', 'w') as f:
 #     f.write(json.dumps(best_ways))
 
 # Use pregenerated best ways
-print('Using pregenerated best ways.\n')
+logging.info('Using pregenerated best ways.\n')
 with open('pregenerated_shortest_ways.txt', 'r') as f:
     best_ways = json.loads(f.read())
 
 # Start new thread for traffic lights
 traffic_lights_control_thread_alive = True
 def trafficLightsControl():
-    print("Traffic Lights loop has been started.\n")
+    logging.info("Traffic Lights loop has been started.\n")
     ppa = 24*12
     ppa2 = ppa + 24*16
     ppa3 = ppa2 + 24*12
@@ -855,7 +855,7 @@ def PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traff
 # RoadLines thread
 roadlines_thread_alive = True
 def RoadLines_Thread():
-    print("RoadLines loop has been started.\n")
+    logging.info("RoadLines loop has been started.\n")
 
     while roadlines_thread_alive:
         road_lines = {}
@@ -868,36 +868,14 @@ def RoadLines_Thread():
                 
                 if car.road_line != 0:
                     road_lines[f'A{car.road_line}'].append(car.id)
-        
-        # Get count of traffic on lines
-        # traffic_count = {}
-        # cars_amount_on_traffic_lights = 0
-        # for key, value in road_lines.items():
-        #     traffic_count[key] = len(value)
-        #     cars_amount_on_traffic_lights += len(value)
+
         car_count_tmp=''
         for key, value in road_lines.items():
             car_count_tmp += f'/{len(value)}*'
         global car_count_answer
         car_count_answer = car_count_tmp
-        
-        # cars_amount = len(crossroad.cars)
-        # ready_jsn = PrepareResponse(road_lines, traffic_count, cars_amount, cars_amount_on_traffic_lights)
-        
-        # car_count_tmp = ''
-        # for key, value in ready_jsn['traffic_count'].items():
-        #     car_count_tmp += f'/{value}*'
-        # global car_count_answer
-        # car_count_answer = car_count_tmp
-
-        # Отправлять каждый раз road_lines на tcp сервер, если он доступен
-        # client.send(bytes(ready_jsn, encoding="UTF-8"))
-        # data = str(client.recv(1024))
-        # print(data)
 
         time.sleep(3)
-    
-    # Если roadlines_thread_alive == False, то закрыть соединение с tcp сервером
 
 roadlines_thread = threading.Thread(target=RoadLines_Thread, args=())
 roadlines_thread.start()
@@ -905,7 +883,7 @@ roadlines_thread.start()
 # Spawn new cars thread
 spawn_new_cars_thread_alive = True
 def SpawnNewCars():
-    print("Spawn new cars loop has been started.\n")
+    logging.info("Spawn new cars loop has been started.\n")
     while spawn_new_cars_thread_alive:
         time.sleep(0.01)
         if len(crossroad.cars) < CAR_AMOUNT:
@@ -993,7 +971,7 @@ traffic_control_tcp_server_thread.start()
 # MainLoop thread
 mainloop_thread_alive = True
 def MainLoop():
-    print("Main loop has been started.\n")
+    logging.info("Main loop has been started.\n")
     while mainloop_thread_alive:
         crossroad.CarsMovement()
 
@@ -1007,37 +985,37 @@ mainloop_thread.start()
 time.sleep(0.5)
 
 # Check User Input for stop app
-print("For exit program use Ctrl+C\n")
+logging.info("For exit program use Ctrl+C\n")
 
 def signal_handler(sig, frame):
-    print('\nTerminating all threads.\n')
+    logging.info('\nTerminating all threads.\n')
     
     global mainloop_thread_alive
     mainloop_thread_alive = False
-    print('Wait for a MainLoop thread to close...')
+    logging.info('Wait for a MainLoop thread to close...')
     mainloop_thread.join()
-    print('MainLoop thread closed.\n')
+    logging.info('MainLoop thread closed.\n')
 
     global spawn_new_cars_thread_alive
     spawn_new_cars_thread_alive = False
-    print('Wait for a SpawnNewCars thread to close... ')
+    logging.info('Wait for a SpawnNewCars thread to close... ')
     spawn_new_cars_thread.join()
-    print('SpawnNewCars thread closed.\n')
+    logging.info('SpawnNewCars thread closed.\n')
 
     global roadlines_thread_alive
     roadlines_thread_alive = False
-    print('Wait for a RoadLines thread to close...')
+    logging.info('Wait for a RoadLines thread to close...')
     roadlines_thread.join()
-    print('RoadLines thread closed.\n')
+    logging.info('RoadLines thread closed.\n')
 
     global traffic_lights_control_thread_alive
     traffic_lights_control_thread_alive = False
-    print('Wait for a TrafficLightsControl thread to close...')
+    logging.info('Wait for a TrafficLightsControl thread to close...')
     traffic_lights_control_thread.join()
-    print('TrafficLightsControl thread closed.\n')
+    logging.info('TrafficLightsControl thread closed.\n')
 
     address_led_strip.ClearPixels()
-    print('Led strip was cleared.\n')
+    logging.info('Led strip was cleared.\n')
 
     global traffic_control_tcp_server_alive
     global send_loop
@@ -1045,9 +1023,9 @@ def signal_handler(sig, frame):
     traffic_control_tcp_server_alive = False
     send_loop = False
     listen_loop = False
-    print('Wait for a TrafficControlTCPServer thread to close...')
+    logging.info('Wait for a TrafficControlTCPServer thread to close...')
     traffic_control_tcp_server_thread.join()
-    print('TrafficControlTCPServer thread closed.\n')
+    logging.info('TrafficControlTCPServer thread closed.\n')
 
     sys.exit(0)
 
