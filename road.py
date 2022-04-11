@@ -22,7 +22,12 @@ server_port = 8000
 
 import logging
 
-logging.basicConfig(format='%(asctime)s %(lineno)d %(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(
+    filename='traffic.log',
+    filemod='a',
+    format='%(asctime)s %(lineno)d %(levelname)s:%(message)s',
+    level=logging.DEBUG
+)
 logger = logging.getLogger(__name__)
 
 NUM_PIXELS = 24*12 + 24*16 + 24*12 + 22*20 # Crossroad 1 = 24*12 pixels, crossroad 2 = 24*16 pixels, crossroad 3 = 24*12 pixels, crossroad 4 = 22*20
@@ -34,6 +39,8 @@ CAR_AMOUNT = 220
 
 car_count_answer = None
 traffic_control = None
+
+car_completed_routes = 0
 
 class AddressLedStrip:
     def __init__(self, num_pixels, pixel_pin, order, brightness):
@@ -495,10 +502,13 @@ class TrafficSimulation:
     def CarsMovement(self):
         for car in self.cars:
 
+            # The car has completed its route
             if car.pos == len(car.movement_way):
                 self.crossroad_road[car.movement_way[car.pos-1]] = None
                 
                 self.cars.remove(car) # remove car from cars list
+                global car_completed_routes
+                car_completed_routes += 1
                 continue
             elif car.pos == 0:
                 self.crossroad_road[car.movement_way[car.pos]] = car
@@ -672,23 +682,23 @@ with open('pregenerated_shortest_ways.txt', 'r') as f:
 # Start new thread for traffic lights
 traffic_lights_control_thread_alive = True
 def trafficLightsControl():
+    global traffic_control
+    global red_signal_telemetry
+
     logging.info("Traffic Lights loop has been started.\n")
     ppa = 24*12
     ppa2 = ppa + 24*16
     ppa3 = ppa2 + 24*12
     timing = time.time()
     ok = False
+
     while traffic_lights_control_thread_alive:
         if time.time() - timing > 1.0:
             try:
                 timing = time.time()
 
-                global traffic_control
                 if traffic_control != None:
                     traffic_control_tmp = traffic_control
-
-                    # global logger
-                    # logger.info(f'Traffic Control Tmp = {traffic_control_tmp}')
 
                     traffic_control_tmp = traffic_control_tmp.split('|')[1:]
 
@@ -1016,6 +1026,9 @@ def signal_handler(sig, frame):
 
     address_led_strip.ClearPixels()
     logging.info('Led strip was cleared.\n')
+
+    global car_completed_routes
+    logging.info(f'[ANSWER]: Amount of cars has completed its routes: {car_completed_routes!r}\n')
 
     global traffic_control_tcp_server_alive
     global send_loop
